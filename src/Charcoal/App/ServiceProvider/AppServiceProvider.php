@@ -5,60 +5,43 @@ namespace Charcoal\App\ServiceProvider;
 // From PSR-7
 use Charcoal\Factory\GenericResolver;
 use Psr\Http\Message\UriInterface;
-
 // From Pimple
 use Pimple\ServiceProviderInterface;
 use Pimple\Container;
-
 // From Slim
 use Slim\Http\Uri;
-
 // From 'league/climate'
 use League\CLImate\CLImate;
-
 // From Mustache
 use Mustache_LambdaHelper as LambdaHelper;
-
-// From 'charcoal-factory'
 use Charcoal\Factory\GenericFactory as Factory;
-
-// From 'charcoal-cache'
 use Charcoal\Cache\ServiceProvider\CacheServiceProvider;
-
-// From 'charcoal-translator'
 use Charcoal\Translator\ServiceProvider\TranslatorServiceProvider;
-
-// From 'charcoal-view'
-use Charcoal\View\ViewServiceProvider;
-
-// From 'charcoal-app'
 use Charcoal\App\AppConfig;
-
 use Charcoal\App\Action\ActionInterface;
-use Charcoal\App\Script\ScriptInterface;
-use Charcoal\App\Module\ModuleInterface;
-
-use Charcoal\App\Middleware\IpMiddleware;
-
-use Charcoal\App\Route\ActionRoute;
-use Charcoal\App\Route\RouteInterface;
-use Charcoal\App\Route\TemplateRoute;
-
 use Charcoal\App\Handler\Error;
-use Charcoal\App\Handler\PhpError;
 use Charcoal\App\Handler\Maintenance;
 use Charcoal\App\Handler\NotAllowed;
 use Charcoal\App\Handler\NotFound;
-
-use Charcoal\App\Template\TemplateInterface;
-use Charcoal\App\Template\TemplateBuilder;
-use Charcoal\App\Template\WidgetInterface;
-use Charcoal\App\Template\WidgetBuilder;
-
+use Charcoal\App\Handler\PhpError;
+use Charcoal\App\Middleware\IpMiddleware;
+use Charcoal\App\Module\ModuleInterface;
+use Charcoal\App\Route\ActionRoute;
+use Charcoal\App\Route\RouteInterface;
+use Charcoal\App\Route\TemplateRoute;
+use Charcoal\App\Script\ScriptInterface;
 use Charcoal\App\ServiceProvider\DatabaseServiceProvider;
 use Charcoal\App\ServiceProvider\FilesystemServiceProvider;
 use Charcoal\App\ServiceProvider\ScriptServiceProvider;
 use Charcoal\App\ServiceProvider\LoggerServiceProvider;
+use Charcoal\App\Template\TemplateInterface;
+use Charcoal\App\Template\TemplateBuilder;
+use Charcoal\App\Template\WidgetInterface;
+use Charcoal\App\Template\WidgetBuilder;
+use Charcoal\View\Twig\DebugHelpers as TwigDebugHelpers;
+use Charcoal\View\Twig\HelpersInterface as TwigHelpersInterface;
+use Charcoal\View\Twig\UrlHelpers as TwigUrlHelpers;
+use Charcoal\View\ViewServiceProvider;
 
 /**
  * Application Service Provider
@@ -315,7 +298,7 @@ class AppServiceProvider implements ServiceProviderInterface
          * @param  Container $container A service container.
          * @return IpMiddleware
          */
-        $container['middlewares/charcoal/app/middleware/ip'] = function(container $container) {
+        $container['middlewares/charcoal/app/middleware/ip'] = function (container $container) {
             $wareConfig = $container['config']['middlewares']['charcoal/app/middleware/ip'];
             return new IpMiddleware($wareConfig);
         };
@@ -472,6 +455,17 @@ class AppServiceProvider implements ServiceProviderInterface
      */
     protected function registerViewServices(Container $container)
     {
+        $this->registerMustacheHelpersServices($container);
+
+        $this->registerTwigHelpersServices($container);
+    }
+
+    /**
+     * @param Container $container The DI container.
+     * @return void
+     */
+    protected function registerMustacheHelpersServices(Container $container): void
+    {
         if (!isset($container['view/mustache/helpers'])) {
             $container['view/mustache/helpers'] = function () {
                 return [];
@@ -491,7 +485,7 @@ class AppServiceProvider implements ServiceProviderInterface
                  *
                  * @return boolean
                  */
-                'debug' => ($container['config']['debug'] || $container['config']['dev_mode']),
+                'debug' => ($container['config']['debug'] ?? false),
                 /**
                  * Retrieve the base URI of the project.
                  *
@@ -536,11 +530,61 @@ class AppServiceProvider implements ServiceProviderInterface
                     return $uri;
                 },
                 'renderContext' => function ($text, LambdaHelper $helper = null) {
-                    return $helper->render('{{>'.$helper->render($text).'}}');
+                    return $helper->render('{{>' . $helper->render($text) . '}}');
                 },
             ];
 
             return array_merge($helpers, $urls);
+        });
+    }
+
+    /**
+     * @param Container $container The DI container.
+     * @return void
+     */
+    protected function registerTwigHelpersServices(Container $container): void
+    {
+        if (!isset($container['view/twig/helpers'])) {
+            $container['view/twig/helpers'] = function () {
+                return [];
+            };
+        }
+
+        /**
+         * Url helpers for Twig.
+         *
+         * @return TwigUrlHelpers
+         */
+        $container['view/twig/helpers/url'] = function (Container $container): TwigHelpersInterface {
+            return new TwigUrlHelpers([
+                'baseUrl' => $container['base-url'],
+            ]);
+        };
+
+        /**
+         * Debug helpers for Twig.
+         *
+         * @return TwigDebugHelpers
+         */
+        $container['view/twig/helpers/debug'] = function (Container $container): TwigHelpersInterface {
+            return new TwigDebugHelpers([
+                'config'  => $container['config'],
+            ]);
+        };
+
+        /**
+         * Extend global helpers for the Twig Engine.
+         *
+         * @param  array     $helpers   The Mustache helper collection.
+         * @param  Container $container A container instance.
+         * @return array
+         */
+        $container->extend('view/twig/helpers', function (array $helpers, Container $container): array {
+            return array_merge(
+                $helpers,
+                $container['view/twig/helpers/url']->toArray(),
+                $container['view/twig/helpers/debug']->toArray(),
+            );
         });
     }
 }

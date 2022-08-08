@@ -4,11 +4,9 @@ namespace Charcoal\App\Handler;
 
 use Exception;
 use UnexpectedValueException;
-
 // From PSR-7
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-
 // From 'charcoal-app'
 use Charcoal\App\Handler\AbstractError;
 
@@ -19,7 +17,7 @@ use Charcoal\App\Handler\AbstractError;
  */
 class Error extends AbstractError
 {
-    const DEFAULT_PARTIAL = 'charcoal/app/handler/500';
+    public const DEFAULT_PARTIAL = 'charcoal/app/handler/500';
 
     /**
      * Invoke Error Handler

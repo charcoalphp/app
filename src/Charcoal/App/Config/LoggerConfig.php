@@ -3,7 +3,6 @@
 namespace Charcoal\App\Config;
 
 use InvalidArgumentException;
-
 // From 'charcoal-config'
 use Charcoal\Config\AbstractConfig;
 
@@ -12,7 +11,7 @@ use Charcoal\Config\AbstractConfig;
  */
 class LoggerConfig extends AbstractConfig
 {
-    const DEFAULT_CHANNEL = 'charcoal';
+    public const DEFAULT_CHANNEL = 'charcoal';
 
     /**
      * Whether to enable or disable the logger service.

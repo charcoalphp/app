@@ -3,21 +3,16 @@
 namespace Charcoal\App\Action;
 
 use InvalidArgumentException;
-
 // From PSR-7
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-
 // From PSR-3
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-
 // From Pimple
 use Pimple\Container;
-
 // From 'charcoal-config'
 use Charcoal\Config\AbstractEntity;
-
 // From 'charcoal-app'
 use Charcoal\App\Helper\CallbackStream;
 use Charcoal\App\Action\ActionInterface;
@@ -43,11 +38,11 @@ abstract class AbstractAction extends AbstractEntity implements
 {
     use LoggerAwareTrait;
 
-    const MODE_JSON = 'json';
-    const MODE_XML = 'xml';
-    const MODE_REDIRECT = 'redirect';
-    const MODE_EVENT_STREAM = 'event-stream';
-    const DEFAULT_MODE = self::MODE_JSON;
+    public const MODE_JSON = 'json';
+    public const MODE_XML = 'xml';
+    public const MODE_REDIRECT = 'redirect';
+    public const MODE_EVENT_STREAM = 'event-stream';
+    public const DEFAULT_MODE = self::MODE_JSON;
 
     /**
      * @var string $mode
